@@ -95,7 +95,7 @@ import org.slf4j.jul.JDK14LoggerFactory;
  */
 public class BungeeCord extends ProxyServer
 {
-
+    public static volatile boolean isRestarting = false;
     /**
      * Current operation state.
      */
@@ -503,21 +503,34 @@ public class BungeeCord extends ProxyServer
         } catch ( InterruptedException ex )
         {
         }
-
-        getLogger().info( "Thank you and goodbye" );
-        // Need to close loggers after last message!
-        for ( Handler handler : getLogger().getHandlers() )
+getLogger().info( "Thank you and goodbye" );
+        
+        if ( !BungeeCord.isRestarting )
         {
-            handler.close();
+            // Log-Handler NUR schließen, wenn der Prozess wirklich stirbt.
+            // Bei einem internen Restart brauchen wir die Konsole für den nächsten Durchlauf!
+            for ( Handler handler : getLogger().getHandlers() )
+            {
+                handler.close();
+            }
         }
 
-        // Unlock the thread before optionally calling system exit, which might invoke this function again.
-        // If that happens, the system will obtain the lock, and then see that isRunning == false and return without doing anything.
+        // Instanz-Referenz nullen, damit waitForShutdown() im Bootstrap anschlägt
+        BungeeCord.setInstance( null );
+
         shutdownLock.unlock();
 
         if ( callSystemExit )
         {
-            System.exit( 0 );
+            if ( BungeeCord.isRestarting )
+            {
+                getLogger().info( "Interner Restart-Trigger aktiv. Beende Shutdown-Thread kontrolliert." );
+                // Beendet sauber diesen asynchronen Shutdown-Thread, ohne die JVM zu killen
+                return;
+            } else 
+            {
+                System.exit( 0 );
+            }
         }
     }
 
