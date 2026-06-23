@@ -515,7 +515,7 @@ getLogger().info( "Thank you and goodbye" );
             }
         }
 
-        // Instanz-Referenz nullen, damit waitForShutdown() im Bootstrap anschlägt
+        // Instance reference nullen, so that waitForShutdown() at the Bootstrap reacts
         BungeeCord.setInstance( null );
 
         shutdownLock.unlock();
@@ -524,8 +524,8 @@ getLogger().info( "Thank you and goodbye" );
         {
             if ( BungeeCord.isRestarting )
             {
-                getLogger().info( "Interner Restart-Trigger aktiv. Beende Shutdown-Thread kontrolliert." );
-                // Beendet sauber diesen asynchronen Shutdown-Thread, ohne die JVM zu killen
+                getLogger().info( "Internal restart trigger active. Shutting down restart thread..." );
+                // quits this async shutdown thread without killing the JVM
                 return;
             } else 
             {
